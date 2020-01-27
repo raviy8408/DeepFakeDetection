@@ -5,6 +5,7 @@ import cv2
 import math
 from tqdm import tqdm
 from mtcnn.mtcnn import MTCNN
+from support_funcs import increase_brightness
 
 
 # importing face detector
@@ -46,4 +47,19 @@ for i in tqdm(range(X_train.shape[0])):
                     count += 1
                     cv2.imwrite('C:/Ravi/files/deepfake-detection-challenge/train_mtcnn/' + videoFile + "_"
                                 + "frame%d.jpg" % count, roi_color)
+            else:
+                frame_brightened = increase_brightness(frame, value=30)
+                faces_bright = detector.detect_faces(frame_brightened)
+                if len(faces_bright):
+                    print("Face brightening worked")
+                    for (x, y, w, h) in [faces_bright[0]['box']]:
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 3)
+                        # Save faces in a folder
+                        roi_color = frame_brightened[y:y + h, x:x + w]
+                        count += 1
+                        cv2.imwrite('C:/Ravi/files/deepfake-detection-challenge/train_mtcnn/' + videoFile + "_"
+                                    + "frame%d.jpg" % count, roi_color)
+                else:
+                    print(videoFile)
+
     cap.release()
