@@ -5,6 +5,8 @@ import cv2
 import math
 from tqdm import tqdm
 from mtcnn.mtcnn import MTCNN
+from os import listdir
+from os.path import isfile, join
 from support_funcs import increase_brightness, adjust_brightness_and_contrast
 
 base_dir = "C:/Ravi/files/deepfake-detection-challenge/"
@@ -103,4 +105,26 @@ for i in tqdm(range(X_test.shape[0])):
                     print(videoFile)
 
     cap.release()
+
+# create face image tag for frame, to be used in baseline model
+# train data tags
+train_faces = [f for f in listdir(base_dir + 'train_mtcnn/') if isfile(join(base_dir + 'train_mtcnn/', f))]
+train_faces_df = pd.DataFrame({'file_name': train_faces})
+train_faces_df["video"] = train_faces_df["file_name"].apply(lambda x: x.split("_")[0])
+train_faces_tag_df = pd.merge(left=train_faces_df, left_on=["video"], right=pd_dt[["video", "label"]],
+                              right_on=["video"], how="left")
+train_faces_tag_df.to_csv(base_dir + 'train_mtcnn/' + "train_faces_tag_df.csv", index=False, header=True)
+print(train_faces_tag_df.head())
+
+# test data tags
+test_faces = [f for f in listdir(base_dir + 'test_mtcnn/') if isfile(join(base_dir + 'test_mtcnn/', f))]
+test_faces_df = pd.DataFrame({'file_name': test_faces})
+test_faces_df["video"] = test_faces_df["file_name"].apply(lambda x: x.split("_")[0])
+test_faces_tag_df = pd.merge(left=test_faces_df, left_on=["video"], right=pd_dt[["video", "label"]],
+                             right_on=["video"], how="left")
+test_faces_tag_df.to_csv(base_dir + 'test_mtcnn/' + "test_faces_tag_df.csv", index=False, header=True)
+print(test_faces_tag_df.head())
+
+
+
 
