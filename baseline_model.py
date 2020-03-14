@@ -13,8 +13,8 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 base_dir = "C:/Ravi/files/deepfake-detection-challenge/"
 
 # data load
-train_data = pd.read_csv(base_dir + 'train_mtcnn/' + "train_faces_tag_df.csv")
-test_data = pd.read_csv(base_dir + 'test_mtcnn/' + "test_faces_tag_df.csv")
+train_data = pd.read_csv(base_dir + 'train_yolo/' + "train_faces_tag_df.csv")
+test_data = pd.read_csv(base_dir + 'test_yolo/' + "test_faces_tag_df.csv")
 
 # creating an empty list
 train_image = []
@@ -23,7 +23,7 @@ test_image = []
 # for loop to read and store frames
 for i in tqdm(range(train_data.shape[0])):
     # loading the image and keeping the target size as (224,224,3)
-    img = image.load_img(base_dir + 'train_mtcnn/' + train_data['file_name'][i], target_size=(224, 224, 3))
+    img = image.load_img(base_dir + 'train_yolo/' + train_data['file_name'][i], target_size=(224, 224, 3))
     # converting it to array
     img = image.img_to_array(img)
     # normalizing the pixel value
@@ -33,7 +33,7 @@ for i in tqdm(range(train_data.shape[0])):
 
 for i in tqdm(range(test_data.shape[0])):
     # loading the image and keeping the target size as (224,224,3)
-    img = image.load_img(base_dir + 'test_mtcnn/' + test_data['file_name'][i], target_size=(224, 224, 3))
+    img = image.load_img(base_dir + 'test_yolo/' + test_data['file_name'][i], target_size=(224, 224, 3))
     # converting it to array
     img = image.img_to_array(img)
     # normalizing the pixel value
@@ -78,6 +78,7 @@ X_train = X_train.reshape(X_train.shape[0], 5*5*2048)
 X_test = X_test.reshape(X_test.shape[0], 5*5*2048)
 # normalizing the pixel values
 max_elem = X_train.max()
+np.savetxt(base_dir + "max_elem.txt", [max_elem])
 X_train = X_train / max_elem
 X_test = X_test/ max_elem
 # shape of images
@@ -106,6 +107,7 @@ model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accur
 
 # training the model
 model.fit(X_train, y_train, epochs=20, validation_data=(X_test, y_test), callbacks=[mcp_save], batch_size=128)
+model.save(base_dir + "model.h5")
 
 y_test_pred_prob = [elem[0] for elem in model.predict(X_test)]
 y_test_pred_class = [1 if elem > 0.5 else 0 for elem in y_test_pred_prob]
@@ -120,7 +122,7 @@ print(classification_report(y_test["FAKE"].values, y_test_pred_class))
 print("\nCohen Kappa:\n")
 print(cohen_kappa_score(y_test["FAKE"].values, y_test_pred_class))
 
-print("\nModel performance at videos level:\n")
+print("\n#######--Model performance at video level--#########\n")
 test_data_pred = test_data.copy()
 test_data_pred["pred_label"] = y_test_pred_class
 
